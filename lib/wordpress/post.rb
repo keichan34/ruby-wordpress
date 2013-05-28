@@ -77,6 +77,21 @@ class WordPress::Post < WordPress::Base
     @post_meta ||= WordPress::Post::Meta.new @conn, @tbl, self
   end
 
+  # Taxonomies
+
+  def get_the_terms taxonomy
+    raise 'Post must be saved before manipulating taxonomies' if @post_id == -1
+    super @post_id, taxonomy
+  end
+
+  def set_post_terms terms, taxonomy, append=false
+    raise 'Post must be saved before manipulating taxonomies' if @post_id == -1
+    terms = [terms] unless terms.kind_of?(Array)
+    current_terms = get_the_terms(taxonomy)
+    return current_terms if current_terms.sort == terms.sort && append == false
+    super @post_id, terms, taxonomy, append=false
+  end
+
   # Initializators
 
   def initialize connection, wp_tables
@@ -97,10 +112,10 @@ class WordPress::Post < WordPress::Base
 
     from_db = false
     # Because the post ID is greater than zero, let's assume that this is a persisted record.
-    from_db = true if values[:post_id] > 0
+    from_db = true if values[:post_id] and values[:post_id] > 0
 
     values.select { |key, value| WORDPRESS_ATTRIBUTES.keys.include? key }.each do |key, value|
-      post.send :"#{key}=", value
+      post.instance_variable_set(:"@#{key}", value)
       post.instance_variable_get(:@in_database)[key] = value if from_db
     end
     post

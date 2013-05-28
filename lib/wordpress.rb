@@ -71,7 +71,7 @@ class WordPress
     end
 
     if args[:name]
-      wheres_and << "`#{@tbl[:posts]}`.`post_title`='#{ @conn.escape args[:name] }'"
+      wheres_and << "`#{@tbl[:posts]}`.`post_name`='#{ @conn.escape args[:name] }'"
     end
 
     if args[:post_status]
@@ -97,5 +97,20 @@ class WordPress
     # 'args' is a hash of attributes that WordPress::Post responds to
     # See wordpress/post.rb
     WordPress::Post.build @conn, @tbl, args
+  end
+
+  def update_taxonomy_counts *taxes
+    taxes.each do |taxonomy|
+      @conn.query("SELECT `term_taxonomy_id`, `count` FROM `#{@tbl[:termtax]}` WHERE `taxonomy`='#{@conn.escape taxonomy.to_s}'").each do |term_tax|
+        termtax_id = term_tax[:term_taxonomy_id]
+        count = 0
+        @conn.query("SELECT COUNT(*) as `c` FROM `#{@tbl[:posts]}`, `#{@tbl[:termrel]}` WHERE `#{@tbl[:posts]}`.`ID`=`#{@tbl[:termrel]}`.`object_id` AND `#{@tbl[:termrel]}`.`term_taxonomy_id`='#{ termtax_id.to_i }'").each do |x|
+          count = x[:c]
+        end
+        if count != term_tax[:count]
+          @conn.query("UPDATE `#{@tbl[:termtax]}` SET `count`='#{count.to_i}' WHERE `term_taxonomy_id`='#{ termtax_id.to_i }'")
+        end
+      end
+    end
   end
 end

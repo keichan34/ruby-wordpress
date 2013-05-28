@@ -67,7 +67,6 @@ class WordPress::Base
   end
 
   def set_post_terms(post_id, terms, taxonomy, append=false)
-    terms.map! { |e| UnicodeUtils.nfc(e) }
     terms_esc = terms.map { |e| "'#{@conn.escape e.to_s}'" }
     terms_slugs = terms.map { |e| "'#{@conn.escape(CGI::escape e.to_s)}'"}
     raise ArgumentError, 'Terms must be an array with more than zero elements' unless terms_esc.count > 0
