@@ -37,7 +37,7 @@ class WordPress::Post < WordPress::Base
   }
 
   def persisted?
-    @post_id == -1 or !unsaved_changes?
+    @post_id != -1 and !unsaved_changes?
   end
 
   def unsaved_changes
