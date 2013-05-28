@@ -1,5 +1,7 @@
 # Encoding: UTF-8
 
+require 'php_serialize'
+
 class WordPress::Post::Meta < WordPress::Base
 
   def initialize connection, wp_tables, post
@@ -12,11 +14,24 @@ class WordPress::Post::Meta < WordPress::Base
     @conn.query("SELECT `meta_value` FROM `#{@tbl[:postmeta]}` WHERE `meta_key`='#{@conn.escape key}' AND `post_id`='#{ @post.post_id.to_i }' LIMIT 1").each do |row|
       v = row[:meta_value]
     end
+    # Apply out-filters
+    if v
+      if v[0] == 'a' and v[-1] == '}'
+        # PHP-serialized array
+        v = PHP.unserialize v
+      end
+    end
     v
   end
 
   def []=(key, value)
     old_value = self[key]
+    # Apply in-filters
+
+    if value.kind_of?(Hash) or value.kind_of?(Array)
+      value = PHP.serialize value
+    end
+
     if !value.nil? and !old_value.nil? and value != old_value
       # Update operation.
       @conn.query("UPDATE `#{@tbl[:postmeta]}` SET `meta_value`='#{@conn.escape value}' WHERE `meta_key`='#{@conn.escape key}' AND `post_id`='#{ @post.post_id.to_i }'")
@@ -44,5 +59,6 @@ class WordPress::Post::Meta < WordPress::Base
     Hash[keys.map { |e| [e, self[e]] }]
   end
   alias_method :to_hash, :to_h
+  alias_method :inspect, :to_h
 
 end

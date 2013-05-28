@@ -1,7 +1,5 @@
 # Encoding: UTF-8
 
-require "wordpress/post/meta"
-
 class WordPress::Post < WordPress::Base
   # Left: DB, right: our symbol
   DB_MAP = {

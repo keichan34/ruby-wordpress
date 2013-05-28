@@ -4,6 +4,7 @@ require "wordpress/error"
 require "wordpress/base"
 require "wordpress/options"
 require "wordpress/post"
+require "wordpress/post/meta"
 
 require 'mysql2'
 require 'php_serialize'
