@@ -54,6 +54,7 @@ class WordPress
     }.merge(args)
 
     wheres_and = []
+    inner_joins = []
 
     # Page finders
 
@@ -77,6 +78,10 @@ class WordPress
       wheres_and << "`#{@tbl[:posts]}`.`ID`='#{ args[:p].to_i }'"
     end
 
+    if args[:post_parent]
+      wheres_and << "`#{@tbl[:posts]}`.`post_parent`='#{ args[:post_parent].to_i }'"
+    end
+
     if args[:name]
       wheres_and << "`#{@tbl[:posts]}`.`post_name`='#{ @conn.escape args[:name] }'"
     end
@@ -95,7 +100,31 @@ class WordPress
       wheres_and << "`#{@tbl[:posts]}`.`ID` NOT IN (#{ args[:post__not_in].map { |e| "'#{ e.to_i }'" }.join ', ' })"
     end
 
-    @conn.query("SELECT * FROM `#{@tbl[:posts]}` WHERE #{ wheres_and.join ' AND ' }").map do |row|
+    # Meta finders
+
+    if (mqs = args[:meta_query]) and mqs.kind_of?(Array)
+      inner_joins << "`#{@tbl[:postmeta]}` ON `#{@tbl[:posts]}`.`ID`=`#{@tbl[:postmeta]}`.`post_id`"
+      mqs.each do |mq|
+        mq_params = {
+          compare: '=',
+          type: 'CHAR' # Ignored for now
+        }.merge(mq)
+
+        # Allowed compares
+        mq_params[:compare] = '=' unless ['=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'].include?(mq_params[:compare])
+
+        wheres_and << "(`#{@tbl[:postmeta]}`.`meta_key`='#{@conn.escape mq_params[:key].to_s}' AND `#{@tbl[:postmeta]}`.`meta_value`='#{@conn.escape mq_params[:value].to_s}')"
+      end
+    end
+
+    query = "SELECT `#{@tbl[:posts]}`.* FROM `#{@tbl[:posts]}` "
+    if inner_joins.length > 0
+      query += "INNER JOIN #{inner_joins.join ', '} "
+    end
+
+    query += "WHERE #{ wheres_and.join ' AND ' }"
+
+    @conn.query(query).map do |row|
       WordPress::Post.build self, row
     end
   end

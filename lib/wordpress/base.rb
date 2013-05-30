@@ -10,6 +10,10 @@ class WordPress::Base
     @tbl = @wp.tbl
   end
 
+  def inspect
+    nil
+  end
+
   def insert(table, content)
     return nil if content.keys.length == 0
 

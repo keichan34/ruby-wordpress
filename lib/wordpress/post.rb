@@ -40,6 +40,14 @@ class WordPress::Post < WordPress::Base
     :comment_count => 0
   }
 
+  def to_h
+    Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }]
+  end
+
+  def inspect
+    to_h.to_s
+  end
+
   def persisted?
     @post_id != -1 and !unsaved_changes?
   end
@@ -155,6 +163,7 @@ class WordPress::Post < WordPress::Base
     buffer = handle.read.force_encoding('BINARY')
     out = File.open(local_filepath.to_s, 'wb')
     out.write buffer
+    out.close
 
     attachment = self.class.build @wp, {
       post_title: title,
@@ -177,7 +186,7 @@ class WordPress::Post < WordPress::Base
 
       thumbnail_filename = title + '-150x150' + ext
       thumb_img = img.resize_to_fill(150, 150)
-      thumb_img.write File.join(file_basename, thumbnail_filename)
+      thumb_img.write File.join(file_basename, "#{'%02d' % today.year}/#{'%02d' % today.month}/#{thumbnail_filename}")
 
       size_hash[:thumbnail] = {
         file: thumbnail_filename,
@@ -209,6 +218,18 @@ class WordPress::Post < WordPress::Base
     end
 
     attachment
+  end
+
+  def featured_image
+    thumb_id = post_meta['_thumbnail_id']
+    @wp.query(post_type: 'attachment', post_parent: @post_id, post_status: 'inherit', p: thumb_id).first if thumb_id
+  end
+
+  def attached_files *args
+    attach_args = {
+      post_type: 'attachment', post_parent: @post_id, post_status: 'inherit'
+      }.merge(args[0] || {})
+    @wp.query attach_args
   end
 
   # Initializators
