@@ -4,8 +4,8 @@ require 'php_serialize'
 
 class WordPress::Post::Meta < WordPress::Base
 
-  def initialize connection, wp_tables, post
-    super connection, wp_tables
+  def initialize root, post
+    super root
     @post = post
   end
 
@@ -34,7 +34,7 @@ class WordPress::Post::Meta < WordPress::Base
 
     if !value.nil? and !old_value.nil? and value != old_value
       # Update operation.
-      @conn.query("UPDATE `#{@tbl[:postmeta]}` SET `meta_value`='#{@conn.escape value}' WHERE `meta_key`='#{@conn.escape key}' AND `post_id`='#{ @post.post_id.to_i }'")
+      @conn.query("UPDATE `#{@tbl[:postmeta]}` SET `meta_value`='#{@conn.escape value.to_s}' WHERE `meta_key`='#{@conn.escape key}' AND `post_id`='#{ @post.post_id.to_i }'")
     elsif value.nil? and !old_value.nil?
       # New value nil, old value not. Delete operation.
       @conn.query("DELETE FROM `#{@tbl[:postmeta]}` WHERE `meta_key`='#{@conn.escape key}' AND `post_id`='#{ @post.post_id.to_i }'")

@@ -1,5 +1,9 @@
 # Encoding: UTF-8
 
+require 'cgi'
+require 'mime/types'
+require 'RMagick'
+
 class WordPress::Post < WordPress::Base
   # Left: DB, right: our symbol
   DB_MAP = {
@@ -81,7 +85,7 @@ class WordPress::Post < WordPress::Base
 
   def post_meta
     raise 'Post must be saved before manipulating metadata' if @post_id == -1
-    @post_meta ||= WordPress::Post::Meta.new @conn, @tbl, self
+    @post_meta ||= WordPress::Post::Meta.new @wp, self
   end
 
   # Taxonomies
@@ -99,9 +103,114 @@ class WordPress::Post < WordPress::Base
     super @post_id, terms, taxonomy, append=false
   end
 
+  # Attachments
+
+  def attach_featured_image image
+    img_id = attach_image(image).post_id
+    post_meta['_thumbnail_id'] = img_id
+  end
+
+  def attach_image image
+    raise 'Post must be saved before manipulating attached images' if @post_id == -1
+
+    # Make a new post with the "attachment" format
+    if image.respond_to? :open
+      handle = image.open
+    end
+
+    title = (0...10).map{(65+rand(26)).chr}.join
+    if image.respond_to? :path
+      path = Pathname.new image.path
+      title = path.each_filename.to_a[-1]
+    end
+
+    mimetype = nil
+    ext = ''
+    if image.respond_to? :meta
+      mimetype = (image.meta['content-type'] || '').split(';')[0]
+      type = MIME::Types[mimetype].first
+      if type
+        ext = '.' + type.extensions.first
+      end
+    else
+      if type = MIME::Types.type_for(title).first
+        mimetype = types.content_type
+        # ext = types.extensions.first
+      end
+    end
+
+    # Build the pathname where this will go.
+    file_basename = File.join(@wp.configuration[:wordpress_wp_content], '/uploads')
+    uri_basename = @wp.configuration[:wordpress_wp_content_url] || (@wp.options['siteurl'] + '/wp-content/uploads')
+
+    today = Date.today
+    relative_filepath = "#{'%02d' % today.year}/#{'%02d' % today.month}/#{title}"
+
+    # Copy the file
+    local_filepath = Pathname.new(File.join(file_basename, relative_filepath + ext))
+    FileUtils.mkdir_p local_filepath.dirname.to_s
+
+    buffer = handle.read.force_encoding('BINARY')
+    out = File.open(local_filepath.to_s, 'wb')
+    out.write buffer
+
+    attachment = self.class.build @wp, {
+      post_title: title,
+      post_name: CGI::escape(title.downcase),
+      post_status: 'inherit',
+      post_parent: @post_id,
+      post_type: 'attachment',
+      post_mime_type: mimetype,
+      guid: uri_basename + '/' + relative_filepath + ext
+    }
+    attachment.save
+
+    attachment.post_meta['_wp_attached_file'] = relative_filepath + ext
+
+    # Get image metadata
+
+    begin
+      img = Magick::Image::read(local_filepath.to_s).first
+      size_hash = {}
+
+      thumbnail_filename = title + '-150x150' + ext
+      thumb_img = img.resize_to_fill(150, 150)
+      thumb_img.write File.join(file_basename, thumbnail_filename)
+
+      size_hash[:thumbnail] = {
+        file: thumbnail_filename,
+        width: 150,
+        height: 150
+      }
+
+      size_hash[:medium] = {
+        file: title + ext,
+        height: img.rows,
+        width: img.columns
+      }
+
+      size_hash[:large] = {
+        file: title + ext,
+        height: img.rows,
+        width: img.columns
+      }
+
+      attachment.post_meta['_wp_attachment_metadata'] = {
+        file: title + ext,
+        height: img.rows,
+        width: img.columns,
+        sizes: size_hash
+      }
+    rescue Exception => e
+      raise e
+    end
+
+    attachment
+  end
+
   # Initializators
 
-  def initialize connection, wp_tables
+  def initialize root
     super
 
     WORDPRESS_ATTRIBUTES.each do |att, default|
@@ -111,8 +220,8 @@ class WordPress::Post < WordPress::Base
     @in_database = {}
   end
 
-  def self.build connection, wp_tables, values
-    post = new connection, wp_tables
+  def self.build root, values
+    post = new root
     # Use the map
     values = Hash[values.map { |k, v| [DB_MAP[k] || k, v] }]
 

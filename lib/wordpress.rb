@@ -29,11 +29,18 @@ class WordPress
     @conn = Mysql2::Client.new options
     @conn.query_options.merge!(symbolize_keys: true)
 
+    @configuration = options
+
     # The WordPress options table
-    @options = WordPress::Options.new @conn, @tbl
+    @options = WordPress::Options.new self
   end
 
   attr_reader :options
+
+  attr_reader :tbl
+  attr_reader :conn
+
+  attr_accessor :configuration
 
   def query args
     # Main query function.
@@ -89,14 +96,14 @@ class WordPress
     end
 
     @conn.query("SELECT * FROM `#{@tbl[:posts]}` WHERE #{ wheres_and.join ' AND ' }").map do |row|
-      WordPress::Post.build @conn, @tbl, row
+      WordPress::Post.build self, row
     end
   end
 
   def new_post args
     # 'args' is a hash of attributes that WordPress::Post responds to
     # See wordpress/post.rb
-    WordPress::Post.build @conn, @tbl, args
+    WordPress::Post.build self, args
   end
 
   def update_taxonomy_counts *taxes

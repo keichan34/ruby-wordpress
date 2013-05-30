@@ -3,9 +3,11 @@
 require 'unicode_utils/nfc'
 
 class WordPress::Base
-  def initialize(connection, wp_tables)
-    @tbl = wp_tables
-    @conn = connection
+  def initialize root
+    @wp = root
+
+    @conn = @wp.conn
+    @tbl = @wp.tbl
   end
 
   def insert(table, content)
