@@ -116,6 +116,8 @@ class WordPress::Post < WordPress::Base
     # Make a new post with the "attachment" format
     if image.respond_to? :open
       handle = image.open
+    else
+      handle = image
     end
 
     title = (0...10).map{(65+rand(26)).chr}.join
@@ -202,7 +204,8 @@ class WordPress::Post < WordPress::Base
         sizes: size_hash
       }
     rescue Exception => e
-      raise e
+      # raise e
+      puts "Warn: Ignoring exception #{e.to_s}"
     end
 
     attachment
