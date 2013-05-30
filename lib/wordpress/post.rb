@@ -74,15 +74,17 @@ class WordPress::Post < WordPress::Base
 
   def save
     # We don't need to save because nothing has changed
-    return true if persisted?
+    return self if persisted?
 
     new_id = update_or_insert @tbl[:posts], "`#{@tbl[:posts]}`.`ID`='#{ post_id.to_i }'", Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }].reject { |k, v| READONLY_ATTRIBUTES.include? k }
 
     # We'll assume everything went OK since no errors were thrown.
-    if new_id > 0
-      @in_database = Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }]
+    @in_database = Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }]
+    if new_id and new_id > 0
       @in_database[:post_id] = @post_id = new_id
     end
+
+    self
   end
 
   def save!
