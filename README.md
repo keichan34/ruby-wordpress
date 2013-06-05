@@ -33,6 +33,13 @@ Additional options:
 
 ## Changelog
 
+### 0.0.2
+
+* Bug fixes
+* Post meta
+* Taxonomy functions
+* Adds post meta queries
+
 ### 0.0.1
 
 * Initial public release
