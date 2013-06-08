@@ -33,6 +33,12 @@ Additional options:
 
 ## Changelog
 
+### 0.0.3 (unreleased)
+
+New features
+
+* PHP serialization for Ruby arrays and hashes in `WordPress::Options`
+
 ### 0.0.2
 
 * Bug fixes
