@@ -1,0 +1,8 @@
+before_script:
+  - mysql -e 'CREATE DATABASE `ruby-wordpress-test`'
+  - cp test_configuration.example.yml test_configuration.yml
+language: ruby
+rvm:
+  - 1.9.3
+  - 2.0.0
+  - rbx-19mode

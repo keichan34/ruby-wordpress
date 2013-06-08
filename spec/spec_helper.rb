@@ -5,6 +5,8 @@ require 'wordpress'
 
 require 'wordpress/schema'
 
+require 'yaml'
+
 require 'pry'
 
 RSpec.configure do |config|
