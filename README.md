@@ -4,6 +4,8 @@
 
 Access your WordPress database with Ruby.
 
+Read more: [http://keita.flagship.cc/2013/06/ruby-wordpress/](http://keita.flagship.cc/2013/06/ruby-wordpress/)
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -32,14 +34,20 @@ See the [mysql2 connection options](https://github.com/brianmario/mysql2#connect
 Additional options:
 
 * `:wordpress_prefix` (default: 'wp_')
+* `:wordpress_wp_content` (used for uploading attachments)
 
 ## Changelog
 
 ### 0.0.3 (unreleased)
 
+Bug fixes
+
+* `WordPress::Post#set_post_terms` will now respect the `append` parameter, when true.
+
 New features
 
 * PHP serialization for Ruby arrays and hashes in `WordPress::Options`
+* 1.8.7 syntax support
 
 ### 0.0.2
 
@@ -53,6 +61,14 @@ New features
 * Initial public release
 * Basic SQL functions (WordPress::Base)
 * `wp_options` accessor
+
+## Hacking
+
+Hack away! Just make sure you have your `test_configuration.yml` file set up correctly. There's an example in `test_configuration.example.yml`; you can copy this and tailor it to your environment.
+
+Please do not use a real database for testing - it is wiped clean before the suite runs, and loads the attached WordPress default schema.
+
+The default `rake` task will run the entire test suite.
 
 ## Contributing
 
