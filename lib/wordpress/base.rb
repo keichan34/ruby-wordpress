@@ -1,6 +1,6 @@
 # Encoding: UTF-8
 
-require 'unicode_utils/nfc'
+require 'unicode_utils/nfc' unless RUBY_VERSION =~ /1\.8\.7/
 
 class WordPress::Base
   def initialize root
@@ -61,9 +61,9 @@ class WordPress::Base
 
   def set_post_meta(id, meta_key, meta_value)
     update_or_insert $tbl[:postmeta], "`post_id`='#{id.to_i}' AND `meta_key`='#{@conn.escape meta_key.to_s}'", {
-      post_id: id,
-      meta_key: meta_key.to_s,
-      meta_value: meta_value.to_s
+      :post_id => id,
+      :meta_key => meta_key.to_s,
+      :meta_value => meta_value.to_s
     }
   end
 

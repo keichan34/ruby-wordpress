@@ -10,7 +10,7 @@ class WordPress::Options < WordPress::Base
     end
     # Apply out-filters
     if v
-      if v[0] == 'a' and v[-1] == '}'
+      if v[0, 1] == 'a' and v[-1, 1] == '}'
         # PHP-serialized array
         v = PHP.unserialize v
       end

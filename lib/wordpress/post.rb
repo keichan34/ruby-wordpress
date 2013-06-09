@@ -168,13 +168,13 @@ class WordPress::Post < WordPress::Base
     out.close
 
     attachment = self.class.build @wp, {
-      post_title: title,
-      post_name: CGI::escape(title.downcase),
-      post_status: 'inherit',
-      post_parent: @post_id,
-      post_type: 'attachment',
-      post_mime_type: mimetype,
-      guid: uri_basename + '/' + relative_filepath + ext
+      :post_title => title,
+      :post_name => CGI::escape(title.downcase),
+      :post_status => 'inherit',
+      :post_parent => @post_id,
+      :post_type => 'attachment',
+      :post_mime_type => mimetype,
+      :guid => uri_basename + '/' + relative_filepath + ext
     }
     attachment.save
 
@@ -191,28 +191,28 @@ class WordPress::Post < WordPress::Base
       thumb_img.write File.join(file_basename, "#{'%02d' % today.year}/#{'%02d' % today.month}/#{thumbnail_filename}")
 
       size_hash[:thumbnail] = {
-        file: thumbnail_filename,
-        width: 150,
-        height: 150
+        :file => thumbnail_filename,
+        :width => 150,
+        :height => 150
       }
 
       size_hash[:medium] = {
-        file: title + ext,
-        height: img.rows,
-        width: img.columns
+        :file => title + ext,
+        :height => img.rows,
+        :width => img.columns
       }
 
       size_hash[:large] = {
-        file: title + ext,
-        height: img.rows,
-        width: img.columns
+        :file => title + ext,
+        :height => img.rows,
+        :width => img.columns
       }
 
       attachment.post_meta['_wp_attachment_metadata'] = {
-        file: title + ext,
-        height: img.rows,
-        width: img.columns,
-        sizes: size_hash
+        :file => title + ext,
+        :height => img.rows,
+        :width => img.columns,
+        :sizes => size_hash
       }
     rescue Exception => e
       # raise e
@@ -224,12 +224,12 @@ class WordPress::Post < WordPress::Base
 
   def featured_image
     thumb_id = post_meta['_thumbnail_id']
-    @wp.query(post_type: 'attachment', post_parent: @post_id, post_status: 'inherit', p: thumb_id).first if thumb_id
+    @wp.query(:post_type => 'attachment', :post_parent => @post_id, :post_status => 'inherit', :p => thumb_id).first if thumb_id
   end
 
   def attached_files *args
     attach_args = {
-      post_type: 'attachment', post_parent: @post_id, post_status: 'inherit'
+      :post_type => 'attachment', :post_parent => @post_id, :post_status => 'inherit'
       }.merge(args[0] || {})
     @wp.query attach_args
   end

@@ -17,17 +17,17 @@ class WordPress
 
     options[:wordpress_prefix] ||= 'wp_'
     @tbl = {
-      terms: options[:wordpress_prefix] + 'terms',
-      termtax: options[:wordpress_prefix] + 'term_taxonomy',
-      termrel: options[:wordpress_prefix] + 'term_relationships',
-      posts: options[:wordpress_prefix] + 'posts',
-      postmeta: options[:wordpress_prefix] + 'postmeta',
-      options: options[:wordpress_prefix] + 'options',
-      prefix: options[:wordpress_prefix]
+      :terms => options[:wordpress_prefix] + 'terms',
+      :termtax => options[:wordpress_prefix] + 'term_taxonomy',
+      :termrel => options[:wordpress_prefix] + 'term_relationships',
+      :posts => options[:wordpress_prefix] + 'posts',
+      :postmeta => options[:wordpress_prefix] + 'postmeta',
+      :options => options[:wordpress_prefix] + 'options',
+      :prefix => options[:wordpress_prefix]
     }
 
     @conn = Mysql2::Client.new options
-    @conn.query_options.merge!(symbolize_keys: true)
+    @conn.query_options.merge!(:symbolize_keys => true)
 
     @configuration = options
 
@@ -49,8 +49,8 @@ class WordPress
 
     # Defaults
     args = {
-      post_type: 'post',
-      post_status: 'publish'
+      :post_type => 'post',
+      :post_status => 'publish'
     }.merge(args)
 
     wheres_and = []
@@ -106,8 +106,8 @@ class WordPress
       inner_joins << "`#{@tbl[:postmeta]}` ON `#{@tbl[:posts]}`.`ID`=`#{@tbl[:postmeta]}`.`post_id`"
       mqs.each do |mq|
         mq_params = {
-          compare: '=',
-          type: 'CHAR' # Ignored for now
+          :compare => '=',
+          :type => 'CHAR' # Ignored for now
         }.merge(mq)
 
         # Allowed compares

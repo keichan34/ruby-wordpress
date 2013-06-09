@@ -19,7 +19,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "mysql2", "~> 0.3.11"
-  spec.add_dependency "unicode_utils", "~> 1.4.0"
+
+  unless RUBY_VERSION =~ /1\.8\.7/
+    spec.add_dependency "unicode_utils", "~> 1.4.0"
+  end
+
   spec.add_dependency "k-php-serialize", "~> 1.2.0"
   spec.add_dependency "mime-types", "~> 1.23"
   spec.add_dependency 'rmagick', '= 2.13.2'
