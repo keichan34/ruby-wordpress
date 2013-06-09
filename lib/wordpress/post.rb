@@ -110,7 +110,7 @@ class WordPress::Post < WordPress::Base
     terms = [terms] unless terms.kind_of?(Array)
     current_terms = get_the_terms(taxonomy)
     return current_terms if current_terms.sort == terms.sort && append == false
-    super @post_id, terms, taxonomy, append=false
+    super @post_id, terms, taxonomy, append
   end
 
   # Attachments
