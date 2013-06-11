@@ -263,4 +263,10 @@ class WordPress::Post < WordPress::Base
     post
   end
 
+  # Equality
+
+  def == other
+    other.post_id == post_id ? true : false
+  end
+
 end

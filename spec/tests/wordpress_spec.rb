@@ -47,8 +47,34 @@ describe WordPress do
     context "meta queries" do
 
       before :each do
-        # Build some metaquery test data.
+        @new_post = $wp.new_post({ :post_title => "Test meta post", :post_name => "test-meta-post", :post_status => 'publish' } )
+        @new_post.save!
 
+        @new_post_2 = $wp.new_post({ :post_title => "Test 2", :post_name => "test-2", :post_status => 'publish' } )
+        @new_post_2.save!
+      end
+
+      it "does query by simple meta comparison" do
+        @new_post.post_meta['hello'] = 'there'
+        subject.query( :meta_query => [ { :key => 'hello', :value => 'there' } ] ).first.should == @new_post
+      end
+
+      it "does query by multiple meta comparison" do
+        @new_post.post_meta['hello'] = 'there'
+        @new_post.post_meta['goodbye'] = 'moon'
+        @new_post_2.post_meta['goodbye'] = 'moon'
+
+        subject.query( :meta_query => [ { :key => 'hello', :value => 'there' }, { :key => 'goodbye', :value => 'moon' } ] ).first.should == @new_post
+      end
+
+      it "does query by LIKE comparison" do
+        @new_post.post_meta['hello'] = 'there'
+        subject.query( :meta_query => [ { :key => 'hello', :value => 'the%', :compare => 'LIKE' } ] ).first.should == @new_post
+      end
+
+      it "does query by NOT LIKE comparison" do
+        @new_post.post_meta['hello'] = 'there'
+        subject.query( :meta_query => [ { :key => 'hello', :value => 'the%', :compare => 'NOT LIKE' } ] ).first.should == nil
       end
 
     end

@@ -43,11 +43,13 @@ Additional options:
 Bug fixes
 
 * `WordPress::Post#set_post_terms` will now respect the `append` parameter, when true.
+* `WordPress#query` `:meta_query` now correctly queries for multiple meta query statements. Only `AND` is supported at this point.
 
 New features
 
 * PHP serialization for Ruby arrays and hashes in `WordPress::Options`
 * 1.8.7 syntax support
+* Added `WordPress::Post#==`. Comparison is performed only with IDs now.
 
 ### 0.0.2
 
