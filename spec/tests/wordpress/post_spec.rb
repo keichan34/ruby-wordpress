@@ -53,19 +53,37 @@ describe WordPress::Post do
       subject.save!
     end
 
-    it "should start out with no categories" do
+    it "does start out with no categories" do
       subject.get_the_terms('category').should == []
     end
 
-    it "should set a category" do
+    it "does set a category" do
       subject.set_post_terms 'hello', 'category'
       subject.get_the_terms('category').should == ['hello']
     end
 
-    it "should append categories" do
+    it "does set multiple categories" do
+      subject.set_post_terms ['hello', 'there'], 'category'
+      subject.get_the_terms('category').sort.should == ['hello', 'there'].sort
+    end
+
+    it "does clear categories when given an empty array" do
+      subject.set_post_terms 'hello', 'category'
+
+      subject.set_post_terms [], 'category'
+      subject.get_the_terms('category').should == []
+    end
+
+    it "does append categories" do
       subject.set_post_terms 'hello', 'category'
       subject.set_post_terms 'there', 'category', true
       subject.get_the_terms('category').sort.should == ['hello', 'there'].sort
+    end
+
+    it "does append multiple categories" do
+      subject.set_post_terms 'hello', 'category'
+      subject.set_post_terms ['there', 'goodbye'], 'category', true
+      subject.get_the_terms('category').sort.should == ['hello', 'there', 'goodbye'].sort
     end
 
   end

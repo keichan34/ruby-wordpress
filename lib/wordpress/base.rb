@@ -75,7 +75,17 @@ class WordPress::Base
   def set_post_terms(post_id, terms, taxonomy, append=false)
     terms_esc = terms.map { |e| "'#{@conn.escape e.to_s}'" }
     terms_slugs = terms.map { |e| "'#{@conn.escape(CGI::escape e.to_s)}'"}
-    raise ArgumentError, 'Terms must be an array with more than zero elements' unless terms_esc.count > 0
+
+    if terms_esc.count == 0 and !append
+      # Overwrite with nothing.
+      @conn.query("DELETE `#{@tbl[:termrel]}` FROM `#{@tbl[:termrel]}` JOIN `#{@tbl[:termtax]}` ON `#{@tbl[:termrel]}`.`term_taxonomy_id`=`#{@tbl[:termtax]}`.`term_taxonomy_id` WHERE `#{@tbl[:termtax]}`.`taxonomy`='#{@conn.escape taxonomy}' AND `#{@tbl[:termrel]}`.`object_id` = '#{post_id.to_i}'")
+
+      return
+    elsif terms_esc.count == 0 and append
+      # Because we want to append nothing, there's no harm done with just returning here.
+      return
+    end
+
     # Cache post terms and term IDs
     termtax_rel = Hash[@conn.query("SELECT `#{@tbl[:termtax]}`.`term_taxonomy_id`, `#{@tbl[:terms]}`.`name` FROM `#{@tbl[:terms]}`, `#{@tbl[:termtax]}` WHERE (`#{@tbl[:terms]}`.`name` IN (#{ terms_esc.join ', ' }) OR `#{@tbl[:terms]}`.`slug` IN (#{ terms_slugs.join ', ' })) AND `#{@tbl[:terms]}`.`term_id` = `#{@tbl[:termtax]}`.`term_id` AND `#{@tbl[:termtax]}`.`taxonomy` = '#{@conn.escape taxonomy}' GROUP BY `#{@tbl[:terms]}`.`name`").map { |e| [e[:name], e[:term_taxonomy_id]] }]
 
