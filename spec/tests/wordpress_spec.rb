@@ -77,6 +77,54 @@ describe WordPress do
         subject.query( :meta_query => [ { :key => 'hello', :value => 'the%', :compare => 'NOT LIKE' } ] ).first.should == nil
       end
 
+      it "does query by BETWEEN using a range" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => (5..15), :compare => 'BETWEEN' } ] ).first.should == @new_post
+      end
+
+      it "does query by BETWEEN using an array" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => [5, 15], :compare => 'BETWEEN' } ] ).first.should == @new_post
+      end
+
+      it "does query by NOT BETWEEN using a range" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => (5..15), :compare => 'NOT BETWEEN' } ] ).first.should == @new_post_2
+      end
+
+      it "does query by NOT BETWEEN using an array" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => [5, 15], :compare => 'NOT BETWEEN' } ] ).first.should == @new_post_2
+      end
+
+      it "does query by IN using a range" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => (5..15), :compare => 'IN' } ] ).first.should == @new_post
+      end
+
+      it "does query by IN using an array" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => [9, 10, 11], :compare => 'IN' } ] ).first.should == @new_post
+      end
+
+      it "does query by NOT IN using a range" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => (5..15), :compare => 'NOT IN' } ] ).first.should == @new_post_2
+      end
+
+      it "does query by NOT IN using an array" do
+        @new_post.post_meta['hello'] = 10
+        @new_post_2.post_meta['hello'] = 20
+        subject.query( :meta_query => [ { :key => 'hello', :value => [9, 10, 11], :compare => 'NOT IN' } ] ).first.should == @new_post_2
+      end
+
     end
 
   end

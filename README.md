@@ -45,6 +45,8 @@ Bug fixes
 * `WordPress::Post#set_post_terms` will now respect the `append` parameter, when true.
 * `WordPress::Post#set_post_terms` now accepts an empty array as the `terms` argument.
 * `WordPress#query` `:meta_query` now correctly queries for multiple meta query statements. Only `AND` is supported at this point.
+* `WordPress#query` `:meta_query` `:type` is now respected correctly
+* `WordPress#query` `:meta_query` `BETWEEN`, `NOT BETWEEN`, `IN`, `NOT IN` works as expected.
 
 New features
 

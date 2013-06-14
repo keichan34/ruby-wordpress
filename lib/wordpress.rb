@@ -112,15 +112,37 @@ class WordPress
         }.merge(mq)
 
         # Allowed compares
-        mq_params[:compare] = '=' unless ['=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'].include?(mq_params[:compare])
+        mq_params[:compare] = '=' unless ['=', '!=', '>', '>=', '<', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN'].include?(mq_params[:compare].upcase)
 
-        wheres_and << "(`#{postmeta_alias}`.`meta_key`='#{@conn.escape mq_params[:key].to_s}' AND `#{postmeta_alias}`.`meta_value` #{mq_params[:compare]} '#{@conn.escape mq_params[:value].to_s}')"
+        # Allowed types
+        mq_params[:type] = 'CHAR' unless ['NUMERIC', 'BINARY', 'CHAR', 'DATE', 'DATETIME', 'DECIMAL', 'SIGNED', 'TIME', 'UNSIGNED'].include?(mq_params[:type].upcase)
+
+        mq_params[:type] = 'SIGNED' if mq_params[:type] == 'NUMERIC'
+
+        if mq_params[:compare] =~ /BETWEEN/
+          # Meta value needs to be a 2-element array or range
+          x = mq_params[:value]
+          raise ArgumentError.new("#{mq_params[:compare]} requires an Array with 2 elements or a Range. You passed #{x.class.to_s}.") if !(x.kind_of?(Array) and x.count == 2) and !x.kind_of?(Range)
+          mq_params[:type] = 'SIGNED' if !mq[:type] and x.first.kind_of?(Integer) and x.last.kind_of?(Integer)
+          mq_params[:type] = 'DECIMAL' if !mq[:type] and x.first.kind_of?(Float) and x.last.kind_of?(Float)
+          comparator = "'#{@conn.escape x.first.to_s}' AND '#{@conn.escape x.last.to_s}'"
+        elsif mq_params[:compare] =~ /IN/
+          x = mq_params[:value]
+          raise ArgumentError.new("#{mq_params[:compare]} requires an Array or a Range.") if !x.kind_of?(Array) and !x.kind_of?(Range)
+          mq_params[:type] = 'SIGNED' if !mq[:type] and x.first.kind_of?(Integer) and x.last.kind_of?(Integer)
+          mq_params[:type] = 'DECIMAL' if !mq[:type] and x.first.kind_of?(Float) and x.last.kind_of?(Float)
+          comparator = '(' + x.map { |e| "'#{ @conn.escape e.to_s }'" }.join(', ') + ')'
+        else
+          comparator = "'" + @conn.escape(mq_params[:value].to_s) + "'"
+        end
+
+        wheres_and << "(`#{postmeta_alias}`.`meta_key`='#{@conn.escape mq_params[:key].to_s}' AND CAST(`#{postmeta_alias}`.`meta_value` AS #{mq_params[:type]}) #{mq_params[:compare]} #{ comparator })"
       end
     end
 
     query = "SELECT `#{@tbl[:posts]}`.* FROM `#{@tbl[:posts]}` "
     if inner_joins.length > 0
-      query += inner_joins.map { |e| "INNER JOIN #{e}" }.join(' ')
+      query += inner_joins.map { |e| "INNER JOIN #{e}" }.join(' ') + ' '
     end
 
     query += "WHERE #{ wheres_and.join ' AND ' }"
