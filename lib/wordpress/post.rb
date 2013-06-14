@@ -269,4 +269,8 @@ class WordPress::Post < WordPress::Base
     other.post_id == post_id ? true : false
   end
 
+  def <=> other
+    post_id <=> other.post_id
+  end
+
 end

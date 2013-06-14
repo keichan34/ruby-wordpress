@@ -67,6 +67,13 @@ describe WordPress do
         subject.query( :meta_query => [ { :key => 'hello', :value => 'there' }, { :key => 'goodbye', :value => 'moon' } ] ).first.should == @new_post
       end
 
+      it "does query by multiple meta comparison with OR" do
+        @new_post.post_meta['hello'] = 'there'
+        @new_post_2.post_meta['goodbye'] = 'moon'
+
+        subject.query( :meta_query => [ { :key => 'hello', :value => 'there' }, { :key => 'goodbye', :value => 'moon' } ], :meta_query_relation => 'OR' ).sort.should == [@new_post, @new_post_2]
+      end
+
       it "does query by LIKE comparison" do
         @new_post.post_meta['hello'] = 'there'
         subject.query( :meta_query => [ { :key => 'hello', :value => 'the%', :compare => 'LIKE' } ] ).first.should == @new_post

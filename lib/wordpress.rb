@@ -103,6 +103,8 @@ class WordPress
     # Meta finders
 
     if (mqs = args[:meta_query]) and mqs.kind_of?(Array)
+      append = (args[:meta_query_relation] || '').upcase == 'OR' ? (meta_ors = []) : wheres_and
+
       mqs.each_with_index do |mq, i|
         postmeta_alias = "pm_#{i}"
         inner_joins << "`#{@tbl[:postmeta]}` AS `#{postmeta_alias}` ON `#{@tbl[:posts]}`.`ID`=`#{postmeta_alias}`.`post_id`"
@@ -136,8 +138,11 @@ class WordPress
           comparator = "'" + @conn.escape(mq_params[:value].to_s) + "'"
         end
 
-        wheres_and << "(`#{postmeta_alias}`.`meta_key`='#{@conn.escape mq_params[:key].to_s}' AND CAST(`#{postmeta_alias}`.`meta_value` AS #{mq_params[:type]}) #{mq_params[:compare]} #{ comparator })"
+        append << "(`#{postmeta_alias}`.`meta_key`='#{@conn.escape mq_params[:key].to_s}' AND CAST(`#{postmeta_alias}`.`meta_value` AS #{mq_params[:type]}) #{mq_params[:compare]} #{ comparator })"
       end
+
+      wheres_and << meta_ors.join(' OR ') if (args[:meta_query_relation] || '').upcase == 'OR'
+
     end
 
     query = "SELECT `#{@tbl[:posts]}`.* FROM `#{@tbl[:posts]}` "
