@@ -1,6 +1,6 @@
 # Ruby/WordPress
 
-[![Build Status](https://travis-ci.org/keichan34/ruby-wordpress.png)](https://travis-ci.org/keichan34/ruby-wordpress)
+[![Build Status](https://travis-ci.org/keichan34/ruby-wordpress.png?branch=master)](https://travis-ci.org/keichan34/ruby-wordpress)
 
 Access your WordPress database with Ruby.
 
