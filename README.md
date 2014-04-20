@@ -38,6 +38,17 @@ Additional options:
 
 ## Changelog
 
+### 0.0.4
+
+Bug fixes
+
+* `WordPress#query` `:post_type` accepts an Array parameter now.
+* MySQL 5.6 "strict mode" error complaining about the format of dates is now fixed.
+
+Notes
+
+* 1.8.7 is no longer supported.
+
 ### 0.0.3
 
 Bug fixes
