@@ -71,7 +71,12 @@ class WordPress
     # Post finders
 
     if args[:post_type]
-      wheres_and << "`#{@tbl[:posts]}`.`post_type`='#{ @conn.escape args[:post_type] }'"
+      if args[:post_type].kind_of? Array
+        postTypeInStatement = args[:post_type].map { |e| "'" + ( @conn.escape e ) + "'" }.join ', '
+        wheres_and << "`#{@tbl[:posts]}`.`post_type` IN (#{ postTypeInStatement })"
+      else
+        wheres_and << "`#{@tbl[:posts]}`.`post_type`='#{ @conn.escape args[:post_type] }'"
+      end
     end
 
     if args[:p]

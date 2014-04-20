@@ -40,6 +40,13 @@ class WordPress::Post < WordPress::Base
     :comment_count => 0
   }
 
+  SAVE_FILTERS = {
+    post_date:         ->( v ){ v.strftime "%Y-%m-%d %H:%M:%S" },
+    post_date_gmt:     ->( v ){ v.strftime "%Y-%m-%d %H:%M:%S" },
+    post_modified:     ->( v ){ v.strftime "%Y-%m-%d %H:%M:%S" },
+    post_modified_gmt: ->( v ){ v.strftime "%Y-%m-%d %H:%M:%S" }
+  }
+
   def to_h
     Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }]
   end
@@ -76,7 +83,13 @@ class WordPress::Post < WordPress::Base
     # We don't need to save because nothing has changed
     return self if persisted?
 
-    new_id = update_or_insert @tbl[:posts], "`#{@tbl[:posts]}`.`ID`='#{ post_id.to_i }'", Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }].reject { |k, v| READONLY_ATTRIBUTES.include? k }
+    save_hash = Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }].reject { |k, v| READONLY_ATTRIBUTES.include? k }
+
+    save_hash = Hash[ save_hash.map { |k, v|
+      [k, SAVE_FILTERS[k] ? SAVE_FILTERS[k].call(v) : v]
+    }]
+
+    new_id = update_or_insert @tbl[:posts], "`#{@tbl[:posts]}`.`ID`='#{ post_id.to_i }'", save_hash
 
     # We'll assume everything went OK since no errors were thrown.
     @in_database = Hash[ WORDPRESS_ATTRIBUTES.keys.map { |e| [e, instance_variable_get(:"@#{e}")] }]
